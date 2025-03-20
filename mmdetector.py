@@ -1,97 +1,96 @@
-import os
-import tkinter as tk
-from tkinter import filedialog, messagebox
 import cv2
-import json
 import base64
+import requests
+import time
 import numpy as np
-from inference_sdk import InferenceHTTPClient
 
-# -----------------------------
-# Step 0: Define output folders
-# -----------------------------
-desktop_path = os.path.join(os.path.expanduser("~"), "Desktop")
-output_folder = os.path.join(desktop_path, "mandm_output")
-os.makedirs(output_folder, exist_ok=True)
-
-# -----------------------------
-# Step 1: Use Tkinter to choose an image file
-# -----------------------------
-root = tk.Tk()
-root.withdraw()
-file_path = filedialog.askopenfilename(
-    title="Select an image for M&M detection",
-    filetypes=[("Image Files", "*.jpg *.jpeg *.png")]
-)
-if not file_path:
-    messagebox.showinfo("Info", "No file selected. Exiting.")
+# Kamera başlat
+cap = cv2.VideoCapture(0)
+if not cap.isOpened():
+    print("❌ Kamera açılamadı.")
     exit()
 
-print(f"Selected file: {file_path}")
-image_basename = os.path.basename(file_path)
-image_name, image_ext = os.path.splitext(image_basename)
+# Roboflow workflow bilgileri
+workspace_name = "mam-nv1e6"                  # workspace adın
+workflow_id = "detect-count-and-visualize-2" # workflow ID
+api_key = "REDACTED_REVOKE_BEFORE_USE"             # API anahtarın
+server_url = "http://localhost:9001"         # yerel Roboflow sunucusu
 
-# -----------------------------
-# Step 2: Set up Inference Client & Run Workflow
-# -----------------------------
-# ✅ Inference Client'i ayarla
-client = InferenceHTTPClient(
-    api_url="http://localhost:9001", # local inference server
-    api_key="REDACTED_REVOKE_BEFORE_USE"
-)
+window_name = "Roboflow Canli Kamera"
+cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
 
-# ✅ Görüntüyü oku ve gönder
-with open(file_path, "rb") as image_file:
-    encoded_image = base64.b64encode(image_file.read()).decode("utf-8")
+fps_limit = 15  # FPS sınırı (ideal performans için)
 
-# ✅ Workflow çalıştır
-result = client.run_workflow(
-    workspace_name="mam-nv1e6",
-    workflow_id="detect-count-and-visualize-2",
-    images={
-        "image": encoded_image
-    }
-)
+headers = {"Content-Type": "application/json"}
 
-# Eğer sonuç bir listeyse ilk elemanı al
-if isinstance(result, list) and len(result) > 0:
-    result_data = result[0]
-else:
-    result_data = result
+try:
+    while True:
+        start_time = time.time()
 
-# -----------------------------
-# Step 3: Save the JSON Annotations
-# -----------------------------
-annotations_file = os.path.join(output_folder, f"{image_name}_annotations.json")
-with open(annotations_file, "w", encoding="utf-8") as f:
-    json.dump(result_data, f, indent=4)
-print(f"✅ Annotations saved to: {annotations_file}")
+        # Kameradan görüntü al
+        ret, frame = cap.read()
+        if not ret:
+            print("❌ Görüntü okunamadı.")
+            break
 
-# -----------------------------
-# Step 4: Decode and Save Annotated Image
-# -----------------------------
-annotated_image_b64 = result_data.get("output_image", "")
-if annotated_image_b64:
-    try:
-        annotated_image_bytes = base64.b64decode(annotated_image_b64)
-        annotated_image_path = os.path.join(output_folder, f"{image_name}_annotated.jpg")
-        with open(annotated_image_path, "wb") as img_file:
-            img_file.write(annotated_image_bytes)
-        print(f"✅ Annotated image saved to: {annotated_image_path}")
-    except Exception as e:
-        print(f"❌ Error decoding annotated image: {e}")
-else:
-    print("⚠️ No annotated image available.")
+        # Görüntüyü base64'e dönüştür
+        _, buffer = cv2.imencode(".jpg", frame)
+        img_base64 = base64.b64encode(buffer).decode("utf-8")
 
-# -----------------------------
-# Step 5: Display Results
-# -----------------------------
-if annotated_image_b64:
-    image_array = np.frombuffer(annotated_image_bytes, np.uint8)
-    display_img = cv2.imdecode(image_array, cv2.IMREAD_COLOR)
-else:
-    display_img = cv2.imread(file_path)
+        # Workflow URL'yi doğru şekilde belirle
+        url = f"{server_url}/{workspace_name}/{workflow_id}?api_key={api_key}"
 
-cv2.imshow("M&M Detector Result", display_img)
-cv2.waitKey(0)
-cv2.destroyAllWindows()
+        # JSON gövdesini oluştur
+        data = {
+            "images": {
+                "image": img_base64
+            }
+        }
+
+        # Workflow'u çağır (POST request)
+        response = requests.post(url, json=data, headers=headers)
+
+        if response.status_code == 200:
+            result = response.json()
+
+            predictions = result.get("predictions", {}).get("predictions", [])
+
+            # Her tahmin için bounding box ve label çiz
+            for pred in predictions:
+                x, y = pred["x"], pred["y"]
+                w, h = pred["width"], pred["height"]
+                class_name = pred.get("class", "Nesne")
+                confidence_score = pred.get("confidence", 0)
+
+                # Bounding box koordinatları
+                x1 = int(x - w / 2)
+                y1 = int(y - h / 2)
+                x2 = int(x + w / 2)
+                y2 = int(y + h / 2)
+
+                # Kutu ve label çizimi
+                cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
+                label = f"{class_name}: {confidence_score * 100:.1f}%"
+                cv2.putText(frame, label, (x1, y1 - 10),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+        else:
+            print(f"❌ Roboflow hata: {response.status_code}, {response.text}")
+
+        # Sonuç görüntüsünü göster
+        cv2.imshow(window_name, frame)
+
+        # 'q' ile çıkış
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+
+        # FPS kontrolü
+        elapsed = time.time() - start_time
+        sleep_time = max(1 / fps_limit - elapsed, 0)
+        time.sleep(sleep_time)
+
+except Exception as e:
+    print(f"❌ Bir hata oluştu: {e}")
+
+finally:
+    cap.release()
+    cv2.destroyAllWindows()
