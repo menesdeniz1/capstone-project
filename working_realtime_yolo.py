@@ -5,7 +5,7 @@ import numpy as np
 
 def main():
     # Load the trained YOLOv8 model
-    model = YOLO('C:/Users/enes/Desktop/capstone/runs/detect/train/weights/best.pt')  # Path to your trained model
+    model = YOLO('C:/Users/enes/Desktop/capstone/runs/detect/train4/weights/best.pt')  # Path to your trained model
 
     # Open the webcam (0 = default webcam)
     cap = cv2.VideoCapture(0)
