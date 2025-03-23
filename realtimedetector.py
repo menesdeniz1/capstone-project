@@ -47,11 +47,15 @@ while True:
 
     predictions = result_data.get("predictions", {}).get("predictions", [])
 
-    # Tahminleri ekrana çiz
+    detected_classes = []  # Algılanan sınıfları tutmak için liste
+
+    # Tahminleri ekrana çiz ve konsola yazdırmak için hazırla
     for pred in predictions:
         x, y, w, h = pred["x"], pred["y"], pred["width"], pred["height"]
         class_name = pred["class"]
         confidence = pred["confidence"]
+
+        detected_classes.append(class_name)  # Sınıf adını ekle
 
         # Kutunun koordinatları
         x1, y1 = int(x - w / 2), int(y - h / 2)
@@ -64,6 +68,12 @@ while True:
         label = f"{class_name}: {confidence:.2f}"
         cv2.putText(frame, label, (x1, y1 - 10),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+
+    # Algılanan sınıfları konsola yazdır
+    if detected_classes:
+        print("Algılanan Nesneler:", ", ".join(detected_classes))
+    else:
+        print("Algılanan Nesne Yok")
 
     # Sonucu göster
     cv2.imshow(window_name, frame)
