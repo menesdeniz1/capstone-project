@@ -15,7 +15,7 @@ if not cap.isOpened():
 
 # Roboflow Inference Client
 client = InferenceHTTPClient(
-    api_url="http://localhost:9001",
+    api_url="https://detect.roboflow.com",
     api_key="REDACTED_REVOKE_BEFORE_USE"
 )
 
@@ -39,7 +39,7 @@ while True:
     # Workflow'u çalıştır
     result = client.run_workflow(
         workspace_name="mam-nv1e6",
-        workflow_id="detect-count-and-visualize-2",
+        workflow_id="detect-count-and-visualize-3",
         images={"image": encoded_image}
     )
 

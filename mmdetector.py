@@ -11,9 +11,9 @@ if not cap.isOpened():
     exit()
 
 # Roboflow workflow bilgileri
-workspace_name = "mam-nv1e6"                  # workspace adın
-workflow_id = "detect-count-and-visualize-2" # workflow ID
-api_key = "REDACTED_REVOKE_BEFORE_USE"             # API anahtarın
+workspace_name="mam-nv1e6",
+workflow_id="detect-count-and-visualize-3",
+api_key="REDACTED_REVOKE_BEFORE_USE"
 server_url = "http://localhost:9001"         # yerel Roboflow sunucusu
 
 window_name = "Roboflow Canli Kamera"
