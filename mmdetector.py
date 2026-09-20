@@ -1,3 +1,4 @@
+from publication_config import ROBOFLOW_API_KEY
 import cv2
 import base64
 import requests
@@ -13,7 +14,7 @@ if not cap.isOpened():
 # Roboflow workflow bilgileri
 workspace_name="mam-nv1e6",
 workflow_id="detect-count-and-visualize-3",
-api_key="REDACTED_REVOKE_BEFORE_USE"
+api_key=ROBOFLOW_API_KEY
 server_url = "http://localhost:9001"         # yerel Roboflow sunucusu
 
 window_name = "Roboflow Canli Kamera"

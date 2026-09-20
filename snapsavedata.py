@@ -1,3 +1,4 @@
+from publication_config import ROBOFLOW_API_KEY
 import os
 import cv2
 import json
@@ -18,7 +19,7 @@ os.makedirs(output_folder, exist_ok=True)
 # -----------------------------
 client = InferenceHTTPClient(
     api_url="http://localhost:9001", # local inference server
-    api_key="REDACTED_REVOKE_BEFORE_USE"
+    api_key=ROBOFLOW_API_KEY
 )
 
 # -----------------------------

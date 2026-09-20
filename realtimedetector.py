@@ -1,3 +1,4 @@
+from publication_config import ROBOFLOW_API_KEY
 import cv2
 import base64
 import numpy as np
@@ -16,7 +17,7 @@ if not cap.isOpened():
 # Roboflow Inference Client
 client = InferenceHTTPClient(
     api_url="https://detect.roboflow.com",
-    api_key="REDACTED_REVOKE_BEFORE_USE"
+    api_key=ROBOFLOW_API_KEY
 )
 
 window_name = "Canli M&M Algilama - HD"
