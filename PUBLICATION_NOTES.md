@@ -16,4 +16,4 @@ Workspace/workflow identifiers remain project-specific. Camera access, service a
 
 ## History and publication
 
-Embedded API credentials were removed from reachable Git history. Commit authors and work sequence are retained, but commit IDs changed. Do not push from old clones. Credential owners must still revoke previously exposed keys; old external copies and cached commits are not erased by this operation. Keep this repository private until those checks are resolved.
+Embedded API credentials were removed from reachable Git history. Commit authors and work sequence are retained, but commit IDs changed. Do not push from old clones. Old external copies and cached commits are not erased by this operation. The owner approved publication of this experimental coursework and explicitly declined provider-key rotation; no claim is made that previously exposed keys are revoked or safe. Hardware validation is still outstanding and is not implied by source publication.

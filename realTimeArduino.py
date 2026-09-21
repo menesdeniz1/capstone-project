@@ -5,6 +5,8 @@ import serial
 from ultralytics import YOLO
 import threading
 import queue
+import os
+from pathlib import Path
 
 # Configuration parameters for easy tuning
 CONFIG = {
@@ -18,7 +20,11 @@ CONFIG = {
 }
 
 class ObjectDetector:
-    def __init__(self, model_path="best4/best.pt", bluetooth_port="COM9", baud_rate=9600):
+    def __init__(self, model_path=None, bluetooth_port=None, baud_rate=9600):
+        model_path = model_path or os.environ.get("CAPSTONE_MODEL_PATH") or str(Path(__file__).resolve().parent / "runs/detect/train4/weights/best.pt")
+        bluetooth_port = bluetooth_port or os.environ.get("CAPSTONE_SERIAL_PORT", "COM9")
+        if not Path(model_path).is_file():
+            raise FileNotFoundError("Set CAPSTONE_MODEL_PATH to a trusted local YOLO checkpoint")
         # Initialize YOLO model with optimization parameters
         self.model = YOLO(model_path)
         
