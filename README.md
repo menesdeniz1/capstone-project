@@ -2,6 +2,12 @@
 
 University team capstone exploring object/color detection with camera input and serial/Bluetooth communication. The repository preserves experimental Python scripts, model artifacts and an Arduino receiver. It is not a validated industrial sorting system.
 
+## Team and related repository
+
+Team of three (Bahçeşehir University capstone, 2025): Mücahid Enes Deniz, Kağan Civelek and Musa Eren Yakut. Per Git history: Mücahid wrote the initial YOLOv8 training/validation/webcam scripts, `data.yaml`, the Roboflow workflow clients (`mmdetector.py`, `realtimedetector.py`, `snapsavedata.py`) and the Colab YOLOv8x-seg training script; Kağan wrote the threaded real-time Arduino loop and the hardware/serial side; Musa committed the training runs.
+
+The servo sorter lives in the companion repository **capstone4992** (`arduino_code.cpp`: Bluetooth serial receives one colour code, a direction servo turns to the colour bin and a drop servo releases the item; `model_code.py`: YOLOv8x-seg training on a 7-class Roboflow dataset — six colours plus non-M&M).
+
 ## Code map
 
 - `realTimeArduino.py`: local Ultralytics YOLO detector with capture/inference/display threads, two bounded queues and serial messages. Defaults assume Windows DirectShow camera 0 and serial port COM9.
